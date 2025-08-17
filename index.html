@@ -21,6 +21,30 @@
 
 </head>
 <body>
+
+    <script>
+function testFirebaseLogin() {
+  console.log('Button clicked!');
+  if (typeof firebase === 'undefined') {
+    console.error('Firebase not loaded!');
+    return;
+  }
+  
+  const provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+    .then((result) => {
+      console.log('Login successful:', result.user.email);
+      alert('Login successful: ' + result.user.email);
+    })
+    .catch((error) => {
+      console.error('Login error:', error);
+      alert('Login error: ' + error.message);
+    });
+}
+</script>
+
+<button onclick="testFirebaseLogin()">Test Login</button>
+
 <!-- 
       <div id="auth-controls" style="text-align:right; padding:10px;">
         <button id="login-btn" class="btn">Login with Google</button>
