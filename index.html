@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Desktop Navigation -->
+    <nav class="navbar desktop-nav">
+        <div class="container">
+            <div class="navbar-brand">
+                <h2>Purchase Manager</h2>
+                <div class="sync-status" id="sync-status-desktop">
+                    <span class="sync-indicator connected"></span>
+                    <span class="sync-text">Connected to Google Drive</span>
+                </div>
+            </div>
+            <div class="navbar-nav">
+                <button class="nav-link active" data-page="dashboard">Dashboard</button>
+                <button class="nav-link" data-page="purchases">Purchases</button>
+                <button class="nav-link" data-page="payments">Payment History</button>
+                <button class="nav-link" data-page="photos">Photos</button>
+                <button class="nav-link" data-page="suppliers">Suppliers</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Bottom Navigation -->
+     
+    <!-- <nav class="bottom-nav mobile-nav">
+        <button class="bottom-nav-item active" data-page="dashboard">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Dashboard</span>
+        </button>
+        <button class="bottom-nav-item" data-page="purchases">
+            <span class="nav-icon">📋</span>
+            <span class="nav-label">Purchases</span>
+        </button>
+        <button class="bottom-nav-item" data-page="payments">
+            <span class="nav-icon">💳</span>
+            <span class="nav-label">Payments</span>
+        </button>
+        <button class="bottom-nav-item" data-page="photos">
+            <span class="nav-icon">📷</span>
+            <span class="nav-label">Photos</span>
+        </button>
+        <button class="bottom-nav-item" data-page="suppliers">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-label">Suppliers</span>
+        </button>
+    </nav> -->
+
+    <!-- Dashboard Page -->
+    <div id="dashboard-page" class="page active">
+        <div class="container">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <div class="page-actions">
+                    <button class="btn btn--primary" onclick="showAddPurchaseModal()">Add New Purchase</button>
+                </div>
+            </div>
+
+            <!-- Sync Status Card (Mobile) -->
+            <div class="sync-card mobile-only">
+                <div class="sync-status" id="sync-status-mobile">
+                    <span class="sync-indicator connected"></span>
+                    <span class="sync-text">Connected to Google Drive</span>
+                </div>
+                <div class="sync-details">
+                    <span id="sync-last-time">Last synced: 2 minutes ago</span>
+                    <span id="sync-storage">2.3GB / 15GB used</span>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-bills">0</div>
+                    <div class="stat-label">Total Bills</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-paid">₹0</div>
+                    <div class="stat-label">Total Paid</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-outstanding">₹0</div>
+                    <div class="stat-label">Outstanding</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="overdue-bills">0</div>
+                    <div class="stat-label">Overdue Bills</div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="card mt-24">
+                <div class="card__body">
+                    <h3 class="mb-16">Recent Activities</h3>
+                    <div class="activity-list" id="recent-activities">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Purchases -->
+            <div class="card mt-24">
+                <div class="card__body">
+                    <h3 class="mb-16">Recent Purchases</h3>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Bill Number</th>
+                                    <th>Supplier</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-purchases">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchases Page -->
+    <div id="purchases-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1>Purchase Management</h1>
+                <div class="page-actions">
+                    <button class="btn btn--primary" onclick="showAddPurchaseModal()">Add New Purchase</button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="form-group">
+                        <input type="text" id="search-purchases" class="form-control" placeholder="Search by bill number, supplier, or item...">
+                    </div>
+                    <div class="form-group">
+                        <select id="status-filter" class="form-control">
+                            <option value="">All Status</option>
+                            <option value="Fully Paid">Fully Paid</option>
+                            <option value="Partially Paid">Partially Paid</option>
+                            <option value="Unpaid">Unpaid</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="supplier-filter" class="form-control">
+                            <option value="">All Suppliers</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Purchases Table -->
+            <div class="card">
+                <div class="card__body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortPurchases('billNumber')">Bill Number ↕</th>
+                                    <th onclick="sortPurchases('supplierName')">Supplier ↕</th>
+                                    <th class="desktop-only" onclick="sortPurchases('item')">Item ↕</th>
+                                    <th onclick="sortPurchases('purchaseDate')">Date ↕</th>
+                                    <th onclick="sortPurchases('billAmount')">Amount ↕</th>
+                                    <th class="desktop-only">Paid</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchases-table">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Page -->
+    <div id="payments-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1>Payment History</h1>
+                <div class="page-actions">
+                    <button class="btn btn--outline" onclick="exportPayments()">Export CSV</button>
+                </div>
+            </div>
+
+            <!-- Payment Filters -->
+            <div class="filters-section">
+                <div class="filters-row">
+                    <div class="form-group">
+                        <input type="text" id="search-payments" class="form-control" placeholder="Search payments...">
+                    </div>
+                    <div class="form-group">
+                        <input type="date" id="date-from" class="form-control" placeholder="From Date">
+                    </div>
+                    <div class="form-group">
+                        <input type="date" id="date-to" class="form-control" placeholder="To Date">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment History Table -->
+            <div class="card">
+                <div class="card__body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortPayments('date')">Date ↕</th>
+                                    <th onclick="sortPayments('billNumber')">Bill Number ↕</th>
+                                    <th>Supplier</th>
+                                    <th onclick="sortPayments('amount')">Amount ↕</th>
+                                    <th class="desktop-only">Method</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payment-history-table">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photos Page -->
+    <div id="photos-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1>Bill Photos</h1>
+                <div class="page-actions">
+                    <input type="text" id="search-photos" class="form-control" style="width: 250px;" placeholder="Search by bill number...">
+                </div>
+            </div>
+
+            <!-- Photo Gallery -->
+            <div class="photo-gallery" id="photo-gallery">
+            </div>
+        </div>
+    </div>
+
+    <!-- Suppliers Page -->
+    <div id="suppliers-page" class="page">
+        <div class="container">
+            <div class="page-header">
+                <h1>Supplier Management</h1>
+                <div class="page-actions">
+                    <button class="btn btn--primary" onclick="showAddSupplierModal()">Add New Supplier</button>
+                </div>
+            </div>
+
+            <div class="suppliers-grid" id="suppliers-grid">
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Purchase Modal -->
+    <div id="add-purchase-modal" class="modal hidden">
+        <div class="modal-overlay" onclick="hideAddPurchaseModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Purchase</h3>
+                <button class="modal-close" onclick="hideAddPurchaseModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="purchase-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Bill Number *</label>
+                            <input type="text" id="bill-number" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Supplier *</label>
+                            <select id="supplier-select" class="form-control" required>
+                                <option value="">Select a supplier</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Item Description *</label>
+                        <textarea id="item-description" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Purchase Date *</label>
+                            <input type="date" id="purchase-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Bill Date *</label>
+                            <input type="date" id="bill-date" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Bill Amount (₹) *</label>
+                            <input type="number" id="bill-amount" class="form-control" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Amount Paid (₹)</label>
+                            <input type="number" id="amount-paid" class="form-control" step="0.01" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Payment Date</label>
+                            <input type="date" id="payment-date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Method</label>
+                            <select id="payment-method" class="form-control">
+                                <option value="">Select method</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Cheque">Cheque</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Bill Photos</label>
+                        <div class="file-upload-area" onclick="document.getElementById('bill-photos').click()">
+                            <span>📷 Click to upload or drag photos here</span>
+                        </div>
+                        <input type="file" id="bill-photos" class="form-control" multiple accept="image/*" style="display: none;">
+                        <div id="photo-preview" class="photo-preview"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="hideAddPurchaseModal()">Cancel</button>
+                <button class="btn btn--primary" onclick="savePurchase()">Save Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Payment Modal -->
+    <div id="add-payment-modal" class="modal hidden">
+        <div class="modal-overlay" onclick="hideAddPaymentModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Payment</h3>
+                <button class="modal-close" onclick="hideAddPaymentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="payment-form">
+                    <input type="hidden" id="payment-purchase-id">
+                    <div class="payment-info">
+                        <h4 id="payment-bill-info"></h4>
+                        <p id="payment-outstanding-info"></p>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Payment Amount (₹) *</label>
+                            <input type="number" id="payment-amount" class="form-control" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Date *</label>
+                            <input type="date" id="payment-date-input" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method *</label>
+                        <select id="payment-method-select" class="form-control" required>
+                            <option value="">Select method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="hideAddPaymentModal()">Cancel</button>
+                <button class="btn btn--primary" onclick="savePayment()">Add Payment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Lightbox Modal -->
+    <div id="photo-lightbox" class="modal hidden">
+        <div class="modal-overlay" onclick="hidePhotoLightbox()"></div>
+        <div class="lightbox-content">
+            <button class="modal-close" onclick="hidePhotoLightbox()">&times;</button>
+            <img id="lightbox-image" src="" alt="Bill Photo">
+            <div class="lightbox-info">
+                <h4 id="lightbox-title"></h4>
+                <p id="lightbox-details"></p>
+            </div>
+            <div class="lightbox-nav">
+                <button class="btn btn--outline" onclick="previousPhoto()">← Previous</button>
+                <button class="btn btn--outline" onclick="nextPhoto()">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Supplier Modal -->
+    <div id="add-supplier-modal" class="modal hidden">
+        <div class="modal-overlay" onclick="hideAddSupplierModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Supplier</h3>
+                <button class="modal-close" onclick="hideAddSupplierModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="supplier-form">
+                    <div class="form-group">
+                        <label class="form-label">Supplier Name *</label>
+                        <input type="text" id="supplier-name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contact Email *</label>
+                        <input type="email" id="supplier-email" class="form-control" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" id="supplier-phone" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Address</label>
+                            <input type="text" id="supplier-address" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" onclick="hideAddSupplierModal()">Cancel</button>
+                <button class="btn btn--primary" onclick="saveSupplier()">Save Supplier</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
