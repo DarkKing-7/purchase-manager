@@ -2,13 +2,6 @@
 
 
 const db = firebase.firestore();
-firebase.firestore().enablePersistence()
-  .catch(err => console.warn("Offline persistence not available:", err));
-
-db.onSnapshotsInSync(() => {
-  // Whenever local and server data are in sync, update UI
-  updateSyncStatus();
-});
 
 const storage = firebase.storage();
 
