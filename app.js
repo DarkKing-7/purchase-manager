@@ -14,7 +14,7 @@ const storage = firebase.storage();
 
 // Google sign-in setup
 const provider = new firebase.auth.GoogleAuthProvider();
-const allowedEmail = "your-email@gmail.com"; // <-- replace with your Gmail
+const allowedEmail = "umiyabuilder111@gmail.com"; // <-- replace with your Gmail
 
 // UI elements
 const loginBtn = document.getElementById("login-btn");
